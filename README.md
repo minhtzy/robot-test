@@ -26,6 +26,8 @@ Full workflow: [docs/test-workflow.md](docs/test-workflow.md).
 
 MCP tools are synchronous request/response calls. For long-running commands where live output matters and polling is not wanted, use VS Code tasks or terminal commands.
 
+`start_nodes` is intentionally non-blocking: each `ros2 run` process starts in the background and returns PID/log metadata, because ROS2 nodes are expected to keep running.
+
 Start with dry-run commands until robot profiles are configured:
 
 ```bash

@@ -51,7 +51,7 @@ function createServer(): McpServer {
   }, async ({ config, dryRun }) => toolResponse(await runRobotCli(["browser-login"], { config, dryRun })));
 
   server.registerTool("start_nodes", {
-    description: "Start configured ROS2 nodes with ros2 run.",
+    description: "Start configured ROS2 nodes with ros2 run as background processes and return PID/log metadata.",
     inputSchema: { ...CommonOptions, profile: z.string(), nodes: z.array(z.string()).optional() }
   }, async ({ config, dryRun, profile, nodes }) => {
     const args = ["start-nodes", "--profile", profile];

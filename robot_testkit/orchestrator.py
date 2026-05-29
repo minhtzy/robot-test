@@ -107,8 +107,14 @@ class RobotOrchestrator:
         results: List[Dict[str, Any]] = []
         for node in select_nodes(profile, node_names):
             command = ["ros2", "run", node["package"], node["executable"], *node.get("args", [])]
-            result = self.runner.run_with_sources(command, self._runtime_sources(), check=False, log_name=f"node_{node['name']}")
-            results.append({"name": node["name"], **result.summary()})
+            metadata_path = self.config.workspace.memory_dir / "nodes" / profile.name / f"{node['name']}.json"
+            result = self.runner.start_background_with_sources(
+                command,
+                self._runtime_sources(),
+                log_name=f"node_{node['name']}",
+                metadata_path=metadata_path,
+            )
+            results.append({"name": node["name"], **result})
         return results
 
     def call_service(self, profile: RobotProfile, service: str, service_type: Optional[str] = None, payload: Optional[str] = None, *, confirmed: bool) -> CommandResult:

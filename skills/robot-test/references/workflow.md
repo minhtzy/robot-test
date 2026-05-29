@@ -41,6 +41,8 @@ Use VS Code tasks or terminal commands for live output:
 - `python3 -m robot_testkit.cli build --profile PROFILE`
 - `python3 -m robot_testkit.cli lint --profile PROFILE`
 
+`start_nodes` is special: it starts configured `ros2 run` commands as background processes and returns PID/log metadata immediately.
+
 ## Safety
 
 - Use simulation profiles before real robot profiles.

@@ -31,11 +31,18 @@ def test_build_and_lint_use_profile_packages_in_dry_run() -> None:
 
 
 def test_start_nodes_requires_known_node_name() -> None:
-    profile = load_config("config/robot-testkit.yaml").profile("fairino_sim")
+    config = load_config("config/robot-testkit.yaml")
+    profile = config.profile("fairino_sim")
 
     assert [node["name"] for node in select_nodes(profile, ["client"])] == ["client"]
     with pytest.raises(ConfigError):
         select_nodes(profile, ["missing_node"])
+
+    result = RobotOrchestrator(config, dry_run=True).start_nodes(profile, ["client"])[0]
+    assert result["background"] is True
+    assert result["started"] is False
+    assert result["pid"] is None
+    assert "ros2 run project_client client_node" in result["command"]
 
 
 def test_monitor_topic_requires_configured_topic_when_profile_is_supplied() -> None:

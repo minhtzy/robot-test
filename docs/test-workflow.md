@@ -122,6 +122,8 @@ ros2 run PACKAGE EXECUTABLE ...
 
 Unknown node names are rejected.
 
+Nodes are started as background processes because `ros2 run` usually stays alive. The command returns immediately with a PID, log path, and metadata path. Node logs are written under `logs/node_<name>.log`; node process metadata is written under `.robot-test-memory/nodes/<profile>/<node>.json`.
+
 ## 7. Call Services
 
 Call only configured and allowlisted services.

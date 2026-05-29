@@ -28,7 +28,7 @@ MCP tools are synchronous request/response calls. For long-running build, lint/t
 5. Only if build and lint pass, launch the target.
 6. Call `launch_target` for simulation/bridge/attach.
 7. Use VS Code `#browser` for robot UI login and verification when available; otherwise call `browser_login`.
-8. Call `start_nodes` for all configured nodes or a named subset.
+8. Call `start_nodes` for all configured nodes or a named subset. Nodes start in the background and return PID/log metadata because `ros2 run` usually stays alive.
 9. Call `call_service` only for configured/allowlisted services. Omit type/payload when the config provides them. Require confirmation for physical actions.
 10. Call `monitor_topic` only for configured topics.
 11. Call `collect_logs`, `analyze_run`, then `update_memory` only from concrete evidence.
