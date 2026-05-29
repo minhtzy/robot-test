@@ -45,13 +45,28 @@ class RobotProfile:
     robot_type: str
     target: str
     launch: Dict[str, Any]
+    build_packages: List[str]
+    lint_packages: List[str]
     nodes: List[Dict[str, Any]]
+    services: List[Dict[str, Any]]
     allowlist_services: List[str]
     monitor_topics: List[str]
 
     @property
     def is_real(self) -> bool:
         return self.target == "real"
+
+    @property
+    def node_names(self) -> List[str]:
+        return [node["name"] for node in self.nodes]
+
+    @property
+    def service_names(self) -> List[str]:
+        names = list(self.allowlist_services)
+        for service in self.services:
+            if service.get("name") not in names:
+                names.append(service["name"])
+        return names
 
 
 @dataclass(frozen=True)
@@ -117,13 +132,23 @@ def load_config(path: Union[str, Path] = "config/robot-testkit.yaml") -> RobotTe
 
     robots: Dict[str, RobotProfile] = {}
     for name, profile in (raw.get("robots") or {}).items():
+        nodes = list(profile.get("nodes", []))
+        node_packages = sorted({node["package"] for node in nodes if node.get("package")})
+        services = list(profile.get("services", []))
+        allowlist_services = list(profile.get("allowlist_services", []))
+        for service in services:
+            if service.get("name") and service["name"] not in allowlist_services:
+                allowlist_services.append(service["name"])
         robots[name] = RobotProfile(
             name=name,
             robot_type=profile["robot_type"],
             target=profile["target"],
             launch=dict(profile.get("launch", {})),
-            nodes=list(profile.get("nodes", [])),
-            allowlist_services=list(profile.get("allowlist_services", [])),
+            build_packages=list(profile.get("build_packages", node_packages)),
+            lint_packages=list(profile.get("lint_packages", profile.get("build_packages", node_packages))),
+            nodes=nodes,
+            services=services,
+            allowlist_services=allowlist_services,
             monitor_topics=list(profile.get("monitor_topics", [])),
         )
 

@@ -16,8 +16,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dry-run", action="store_true")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("build")
-    sub.add_parser("lint")
+    build = sub.add_parser("build")
+    build.add_argument("--profile")
+
+    lint = sub.add_parser("lint")
+    lint.add_argument("--profile")
+
+    targets = sub.add_parser("targets")
+    targets.add_argument("--profile", required=True)
 
     launch = sub.add_parser("launch")
     launch.add_argument("--profile", required=True)
@@ -27,15 +33,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     nodes = sub.add_parser("start-nodes")
     nodes.add_argument("--profile", required=True)
+    nodes.add_argument("--node", action="append", dest="nodes")
 
     service = sub.add_parser("call-service")
     service.add_argument("--profile", required=True)
     service.add_argument("--service", required=True)
-    service.add_argument("--type", required=True)
-    service.add_argument("--payload", required=True)
+    service.add_argument("--type")
+    service.add_argument("--payload")
     service.add_argument("--confirm", action="store_true")
 
     topic = sub.add_parser("monitor-topic")
+    topic.add_argument("--profile")
     topic.add_argument("--topic", required=True)
     topic.add_argument("--seconds", type=int, default=10)
 
@@ -59,20 +67,25 @@ def main(argv: Optional[List[str]] = None) -> int:
         orchestrator = RobotOrchestrator(config, dry_run=args.dry_run)
 
         if args.command == "build":
-            output = orchestrator.build_source().summary()
+            profile = config.profile(args.profile) if args.profile else None
+            output = orchestrator.build_source(profile).summary()
         elif args.command == "lint":
-            output = orchestrator.run_lint_tests().summary()
+            profile = config.profile(args.profile) if args.profile else None
+            output = orchestrator.run_lint_tests(profile).summary()
+        elif args.command == "targets":
+            output = orchestrator.describe_targets(config.profile(args.profile))
         elif args.command == "launch":
             output = orchestrator.launch_target(config.profile(args.profile))
         elif args.command == "browser-login":
             output = orchestrator.login_browser()
         elif args.command == "start-nodes":
-            output = orchestrator.start_nodes(config.profile(args.profile))
+            output = orchestrator.start_nodes(config.profile(args.profile), node_names=args.nodes)
         elif args.command == "call-service":
             profile = config.profile(args.profile)
             output = orchestrator.call_service(profile, args.service, args.type, args.payload, confirmed=args.confirm).summary()
         elif args.command == "monitor-topic":
-            output = orchestrator.monitor_topic(args.topic, duration_seconds=args.seconds).summary()
+            profile = config.profile(args.profile) if args.profile else None
+            output = orchestrator.monitor_topic(args.topic, profile=profile, duration_seconds=args.seconds).summary()
         elif args.command in {"collect-logs", "analyze"}:
             output = orchestrator.collect_logs()
         elif args.command == "run-scenario":

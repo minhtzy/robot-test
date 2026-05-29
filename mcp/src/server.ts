@@ -19,13 +19,26 @@ function createServer(): McpServer {
 
   server.registerTool("build_source", {
     description: "Run colcon build for the ROS2 workspace.",
-    inputSchema: CommonOptions
-  }, async ({ config, dryRun }) => toolResponse(await runRobotCli(["build"], { config, dryRun })));
+    inputSchema: { ...CommonOptions, profile: z.string().optional() }
+  }, async ({ config, dryRun, profile }) => {
+    const args = ["build"];
+    if (profile) args.push("--profile", profile);
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
+  });
 
   server.registerTool("run_lint_tests", {
     description: "Run colcon test with lint options from config.",
-    inputSchema: CommonOptions
-  }, async ({ config, dryRun }) => toolResponse(await runRobotCli(["lint"], { config, dryRun })));
+    inputSchema: { ...CommonOptions, profile: z.string().optional() }
+  }, async ({ config, dryRun, profile }) => {
+    const args = ["lint"];
+    if (profile) args.push("--profile", profile);
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
+  });
+
+  server.registerTool("targets", {
+    description: "Return configured build packages, lint packages, ROS2 nodes, services, and topics for a robot profile.",
+    inputSchema: { ...CommonOptions, profile: z.string() }
+  }, async ({ config, dryRun, profile }) => toolResponse(await runRobotCli(["targets", "--profile", profile], { config, dryRun })));
 
   server.registerTool("launch_target", {
     description: "Launch simulation, attach to a real robot, or call the FANUC Windows bridge.",
@@ -39,8 +52,12 @@ function createServer(): McpServer {
 
   server.registerTool("start_nodes", {
     description: "Start configured ROS2 nodes with ros2 run.",
-    inputSchema: { ...CommonOptions, profile: z.string() }
-  }, async ({ config, dryRun, profile }) => toolResponse(await runRobotCli(["start-nodes", "--profile", profile], { config, dryRun })));
+    inputSchema: { ...CommonOptions, profile: z.string(), nodes: z.array(z.string()).optional() }
+  }, async ({ config, dryRun, profile, nodes }) => {
+    const args = ["start-nodes", "--profile", profile];
+    for (const node of nodes ?? []) args.push("--node", node);
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
+  });
 
   server.registerTool("call_service", {
     description: "Call an allowlisted ROS2 service. Physical robot actions require confirm=true.",
@@ -48,20 +65,26 @@ function createServer(): McpServer {
       ...CommonOptions,
       profile: z.string(),
       service: z.string(),
-      serviceType: z.string(),
-      payload: z.string(),
+      serviceType: z.string().optional(),
+      payload: z.string().optional(),
       confirm: z.boolean().default(false)
     }
   }, async ({ config, dryRun, profile, service, serviceType, payload, confirm }) => {
-    const args = ["call-service", "--profile", profile, "--service", service, "--type", serviceType, "--payload", payload];
+    const args = ["call-service", "--profile", profile, "--service", service];
+    if (serviceType !== undefined) args.push("--type", serviceType);
+    if (payload !== undefined) args.push("--payload", payload);
     if (confirm) args.push("--confirm");
     return toolResponse(await runRobotCli(args, { config, dryRun }));
   });
 
   server.registerTool("monitor_topic", {
     description: "Monitor a ROS2 topic for a bounded duration.",
-    inputSchema: { ...CommonOptions, topic: z.string(), seconds: z.number().int().positive().default(10) }
-  }, async ({ config, dryRun, topic, seconds }) => toolResponse(await runRobotCli(["monitor-topic", "--topic", topic, "--seconds", String(seconds)], { config, dryRun })));
+    inputSchema: { ...CommonOptions, profile: z.string().optional(), topic: z.string(), seconds: z.number().int().positive().default(10) }
+  }, async ({ config, dryRun, profile, topic, seconds }) => {
+    const args = ["monitor-topic", "--topic", topic, "--seconds", String(seconds)];
+    if (profile) args.push("--profile", profile);
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
+  });
 
   server.registerTool("collect_logs", {
     description: "Collect and analyze latest logs into reports/latest.json.",

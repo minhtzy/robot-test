@@ -42,6 +42,14 @@ robots:
       user: "root"
       replace_existing: true
       health_command: "docker ps --filter name=fairino-container --filter status=running"
+    build_packages:
+      - "project_client"
+      - "project_robot_control"
+      - "project_arm_control"
+    lint_packages:
+      - "project_client"
+      - "project_robot_control"
+      - "project_arm_control"
     nodes:
       - name: "client"
         package: "project_client"
@@ -58,6 +66,19 @@ robots:
       - "/robot_control/set_io"
       - "/arm_control/move"
       - "/arm_control/stop"
+    services:
+      - name: "/robot_control/init_session"
+        type: "std_srvs/srv/Trigger"
+        payload: "{}"
+      - name: "/robot_control/set_io"
+        type: "example_interfaces/srv/SetBool"
+        payload: "{data: true}"
+      - name: "/arm_control/move"
+        type: "example_interfaces/srv/Trigger"
+        payload: "{}"
+      - name: "/arm_control/stop"
+        type: "std_srvs/srv/Trigger"
+        payload: "{}"
     monitor_topics:
       - "/arm/state"
   ur_sim:
@@ -69,6 +90,14 @@ robots:
       profile: "ur-sim"
       network: "ur-net"
       health_command: "docker compose -f docker/ur/docker-compose.yaml ps --status running"
+    build_packages:
+      - "project_client"
+      - "project_robot_control"
+      - "project_arm_control"
+    lint_packages:
+      - "project_client"
+      - "project_robot_control"
+      - "project_arm_control"
     nodes:
       - name: "client"
         package: "project_client"
@@ -85,6 +114,19 @@ robots:
       - "/robot_control/set_io"
       - "/arm_control/move"
       - "/arm_control/stop"
+    services:
+      - name: "/robot_control/init_session"
+        type: "std_srvs/srv/Trigger"
+        payload: "{}"
+      - name: "/robot_control/set_io"
+        type: "example_interfaces/srv/SetBool"
+        payload: "{data: true}"
+      - name: "/arm_control/move"
+        type: "example_interfaces/srv/Trigger"
+        payload: "{}"
+      - name: "/arm_control/stop"
+        type: "std_srvs/srv/Trigger"
+        payload: "{}"
     monitor_topics:
       - "/arm/state"
   fanuc_windows:
@@ -99,6 +141,19 @@ robots:
       - "/fanuc/set_io"
       - "/fanuc/move"
       - "/fanuc/stop"
+    services:
+      - name: "/fanuc/init_session"
+        type: "std_srvs/srv/Trigger"
+        payload: "{}"
+      - name: "/fanuc/set_io"
+        type: "example_interfaces/srv/SetBool"
+        payload: "{data: true}"
+      - name: "/fanuc/move"
+        type: "std_srvs/srv/Trigger"
+        payload: "{}"
+      - name: "/fanuc/stop"
+        type: "std_srvs/srv/Trigger"
+        payload: "{}"
     monitor_topics:
       - "/fanuc/arm_state"
   real_robot_template:

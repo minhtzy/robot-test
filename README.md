@@ -14,6 +14,13 @@ ROS2 environment sourcing:
 - `ros2 run`, `ros2 service`, and `ros2 topic` run after `source /opt/ros/{ros_distro}/setup.bash && source install/setup.bash`.
 - Configure `ros_distro`, `colcon_ros_setup`, `runtime_ros_setup`, and `workspace_setup` in `config/robot-testkit.yaml`.
 
+Robot targets are resolved from each profile before execution:
+
+- `build_packages` and `lint_packages` become `colcon ... --packages-select ...`.
+- `nodes` define the exact `ros2 run PACKAGE EXECUTABLE` calls.
+- `services` define allowed service names plus default type/payload.
+- `monitor_topics` defines topics allowed for `ros2 topic echo`.
+
 Start with dry-run commands until robot profiles are configured:
 
 ```bash

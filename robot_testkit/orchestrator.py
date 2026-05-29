@@ -9,11 +9,19 @@ from pathlib import Path
 from .analyzer import analyze_logs
 from .browser import browser_login
 from .config import RobotProfile, RobotTestkitConfig
+from .errors import ConfigError
 from .docker import build_docker_run_command, ensure_docker_network, remove_existing_container
 from .fanuc import call_fanuc_bridge
 from .memory import MemoryStore
 from .runner import CommandResult, CommandRunner
 from .safety import assert_confirmation, assert_service_allowed
+from .targets import (
+    assert_topic_allowed,
+    colcon_packages_args,
+    describe_profile_targets,
+    resolve_service,
+    select_nodes,
+)
 
 
 def run_hook(name: str, runner: CommandRunner, payload: Optional[Dict[str, Any]] = None) -> Optional[CommandResult]:
@@ -44,14 +52,19 @@ class RobotOrchestrator:
             self._resolve_source(self.config.workspace.workspace_setup),
         ]
 
-    def build_source(self) -> CommandResult:
+    def describe_targets(self, profile: RobotProfile) -> Dict[str, Any]:
+        return describe_profile_targets(profile)
+
+    def build_source(self, profile: Optional[RobotProfile] = None) -> CommandResult:
         run_hook("pre_build", self.runner)
-        result = self.runner.run_with_sources(["colcon", "build", *self.config.workspace.build_args], self._colcon_sources(), timeout=None, log_name="colcon_build")
+        command = ["colcon", "build", *colcon_packages_args(profile, "build"), *self.config.workspace.build_args]
+        result = self.runner.run_with_sources(command, self._colcon_sources(), timeout=None, log_name="colcon_build")
         run_hook("post_build", self.runner, result.summary())
         return result
 
-    def run_lint_tests(self) -> CommandResult:
-        result = self.runner.run_with_sources(["colcon", "test", *self.config.workspace.lint_test_args], self._colcon_sources(), timeout=None, log_name="colcon_test_lint")
+    def run_lint_tests(self, profile: Optional[RobotProfile] = None) -> CommandResult:
+        command = ["colcon", "test", *colcon_packages_args(profile, "lint"), *self.config.workspace.lint_test_args]
+        result = self.runner.run_with_sources(command, self._colcon_sources(), timeout=None, log_name="colcon_test_lint")
         run_hook("post_lint", self.runner, result.summary())
         return result
 
@@ -90,27 +103,34 @@ class RobotOrchestrator:
         result = browser_login(self.config.browser, self.runner)
         return {"adapter": result.adapter, "opened": result.opened, "message": result.message}
 
-    def start_nodes(self, profile: RobotProfile) -> List[Dict[str, Any]]:
+    def start_nodes(self, profile: RobotProfile, node_names: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         results: List[Dict[str, Any]] = []
-        for node in profile.nodes:
+        for node in select_nodes(profile, node_names):
             command = ["ros2", "run", node["package"], node["executable"], *node.get("args", [])]
             result = self.runner.run_with_sources(command, self._runtime_sources(), check=False, log_name=f"node_{node['name']}")
             results.append({"name": node["name"], **result.summary()})
         return results
 
-    def call_service(self, profile: RobotProfile, service: str, service_type: str, payload: str, *, confirmed: bool) -> CommandResult:
+    def call_service(self, profile: RobotProfile, service: str, service_type: Optional[str] = None, payload: Optional[str] = None, *, confirmed: bool) -> CommandResult:
         assert_service_allowed(service, profile)
         assert_confirmation(service, profile, confirmed)
+        service_target = resolve_service(profile, service)
+        resolved_type = service_type or (service_target or {}).get("type")
+        resolved_payload = payload if payload is not None else (service_target or {}).get("payload")
+        if not resolved_type or resolved_payload is None:
+            raise ConfigError("service '{}' requires type and payload in config or command arguments".format(service))
         run_hook("pre_robot_action", self.runner, {"profile": profile.name, "service": service})
         result = self.runner.run_with_sources(
-            ["ros2", "service", "call", service, service_type, payload],
+            ["ros2", "service", "call", service, resolved_type, resolved_payload],
             self._runtime_sources(),
             log_name=f"service_{service.strip('/').replace('/', '_')}",
         )
         run_hook("post_robot_action", self.runner, result.summary())
         return result
 
-    def monitor_topic(self, topic: str, *, duration_seconds: int = 10) -> CommandResult:
+    def monitor_topic(self, topic: str, *, profile: Optional[RobotProfile] = None, duration_seconds: int = 10) -> CommandResult:
+        if profile:
+            assert_topic_allowed(profile, topic)
         return self.runner.run_with_sources(
             ["timeout", str(duration_seconds), "ros2", "topic", "echo", topic],
             self._runtime_sources(),
@@ -147,12 +167,12 @@ class RobotOrchestrator:
 
     def run_scenario(self, profile_name: str, *, confirmed: bool = False, monitor_seconds: int = 10) -> Dict[str, Any]:
         profile = self.config.profile(profile_name)
-        self.build_source()
-        self.run_lint_tests()
+        self.build_source(profile)
+        self.run_lint_tests(profile)
         launch = self.launch_target(profile)
         browser = self.login_browser()
         nodes = self.start_nodes(profile)
-        topics = [self.monitor_topic(topic, duration_seconds=monitor_seconds).summary() for topic in profile.monitor_topics]
+        topics = [self.monitor_topic(topic, profile=profile, duration_seconds=monitor_seconds).summary() for topic in profile.monitor_topics]
         analysis = self.collect_logs()
         memory = self.update_memory(profile, analysis)
         return {"profile": profile.name, "launch": launch, "browser": browser, "nodes": nodes, "topics": topics, "analysis": analysis, "memory": memory, "confirmed": confirmed}
