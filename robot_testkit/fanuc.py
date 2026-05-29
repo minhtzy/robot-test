@@ -4,7 +4,7 @@ import json
 import os
 import urllib.error
 import urllib.request
-from typing import Any
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from .config import FanucBridgeConfig
@@ -14,10 +14,10 @@ from .errors import CommandError
 def call_fanuc_bridge(
     config: FanucBridgeConfig,
     action: str,
-    payload: dict[str, Any] | None = None,
+    payload: Optional[Dict[str, Any]] = None,
     *,
     dry_run: bool = False,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     body = {
         "request_id": str(uuid4()),
         "action": action,
@@ -42,4 +42,3 @@ def call_fanuc_bridge(
             return json.loads(response.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise CommandError(f"FANUC bridge call failed: {exc}") from exc
-

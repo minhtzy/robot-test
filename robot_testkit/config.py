@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Union
 
 import yaml
 
@@ -13,8 +13,8 @@ from .errors import ConfigError
 class WorkspaceConfig:
     root: Path
     ros_setup: str = ""
-    build_args: list[str] = field(default_factory=list)
-    lint_test_args: list[str] = field(default_factory=list)
+    build_args: List[str] = field(default_factory=list)
+    lint_test_args: List[str] = field(default_factory=list)
     log_dir: Path = Path("logs")
     report_dir: Path = Path("reports")
     memory_dir: Path = Path(".robot-test-memory")
@@ -26,7 +26,7 @@ class BrowserConfig:
     username_env: str = "ROBOT_USERNAME"
     password_env: str = "ROBOT_PASSWORD"
     vscode_tool_command_env: str = "VSCODE_BROWSER_TOOL_COMMAND"
-    adapter_preference: list[str] = field(default_factory=lambda: ["vscode", "playwright", "system"])
+    adapter_preference: List[str] = field(default_factory=lambda: ["vscode", "playwright", "system"])
 
 
 @dataclass(frozen=True)
@@ -41,10 +41,10 @@ class RobotProfile:
     name: str
     robot_type: str
     target: str
-    launch: dict[str, Any]
-    nodes: list[dict[str, Any]]
-    allowlist_services: list[str]
-    monitor_topics: list[str]
+    launch: Dict[str, Any]
+    nodes: List[Dict[str, Any]]
+    allowlist_services: List[str]
+    monitor_topics: List[str]
 
     @property
     def is_real(self) -> bool:
@@ -57,7 +57,7 @@ class RobotTestkitConfig:
     workspace: WorkspaceConfig
     browser: BrowserConfig
     fanuc_bridge: FanucBridgeConfig
-    robots: dict[str, RobotProfile]
+    robots: Dict[str, RobotProfile]
 
     def profile(self, name: str) -> RobotProfile:
         try:
@@ -72,7 +72,7 @@ def _as_path(base: Path, value: str) -> Path:
     return path if path.is_absolute() else base / path
 
 
-def load_config(path: str | Path = "config/robot-testkit.yaml") -> RobotTestkitConfig:
+def load_config(path: Union[str, Path] = "config/robot-testkit.yaml") -> RobotTestkitConfig:
     config_path = Path(path).resolve()
     if not config_path.exists():
         raise ConfigError(f"config file not found: {config_path}")
@@ -109,7 +109,7 @@ def load_config(path: str | Path = "config/robot-testkit.yaml") -> RobotTestkitC
         timeout_seconds=int(fanuc_raw.get("timeout_seconds", 30)),
     )
 
-    robots: dict[str, RobotProfile] = {}
+    robots: Dict[str, RobotProfile] = {}
     for name, profile in (raw.get("robots") or {}).items():
         robots[name] = RobotProfile(
             name=name,
@@ -125,4 +125,3 @@ def load_config(path: str | Path = "config/robot-testkit.yaml") -> RobotTestkitC
         raise ConfigError("at least one robot profile is required")
 
     return RobotTestkitConfig(config_path, workspace, browser, fanuc_bridge, robots)
-

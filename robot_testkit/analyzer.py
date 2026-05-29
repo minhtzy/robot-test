@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List
 
 
 FAILURE_PATTERNS = ("ERROR", "FAILED", "Traceback", "Exception", "Timeout", "timed out")
 WARNING_PATTERNS = ("WARN", "WARNING")
 
 
-def analyze_logs(log_dir: Path) -> dict[str, Any]:
-    findings: list[dict[str, str]] = []
-    warnings: list[dict[str, str]] = []
+def analyze_logs(log_dir: Path) -> Dict[str, Any]:
+    findings: List[Dict[str, str]] = []
+    warnings: List[Dict[str, str]] = []
     if not log_dir.exists():
         return {"status": "unknown", "findings": [{"file": "", "line": "log directory does not exist"}], "warnings": []}
 

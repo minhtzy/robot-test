@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import json
 import time
-from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from .analyzer import analyze_logs
 from .browser import browser_login
@@ -15,7 +14,7 @@ from .runner import CommandResult, CommandRunner
 from .safety import assert_confirmation, assert_service_allowed
 
 
-def run_hook(name: str, runner: CommandRunner, payload: dict[str, Any] | None = None) -> CommandResult | None:
+def run_hook(name: str, runner: CommandRunner, payload: Optional[Dict[str, Any]] = None) -> Optional[CommandResult]:
     hook = runner.cwd / "hooks" / f"{name}.py"
     if not hook.exists():
         return None
@@ -40,7 +39,7 @@ class RobotOrchestrator:
         run_hook("post_lint", self.runner, result.summary())
         return result
 
-    def launch_target(self, profile: RobotProfile) -> dict[str, Any]:
+    def launch_target(self, profile: RobotProfile) -> Dict[str, Any]:
         run_hook("pre_launch", self.runner, {"profile": profile.name})
         launch = profile.launch
         mode = launch.get("mode")
@@ -71,12 +70,12 @@ class RobotOrchestrator:
             return {"mode": "attach", "profile": profile.name}
         return {"mode": mode or "unknown", "profile": profile.name}
 
-    def login_browser(self) -> dict[str, Any]:
+    def login_browser(self) -> Dict[str, Any]:
         result = browser_login(self.config.browser, self.runner)
         return {"adapter": result.adapter, "opened": result.opened, "message": result.message}
 
-    def start_nodes(self, profile: RobotProfile) -> list[dict[str, Any]]:
-        results: list[dict[str, Any]] = []
+    def start_nodes(self, profile: RobotProfile) -> List[Dict[str, Any]]:
+        results: List[Dict[str, Any]] = []
         for node in profile.nodes:
             command = ["ros2", "run", node["package"], node["executable"], *node.get("args", [])]
             result = self.runner.run(command, check=False, log_name=f"node_{node['name']}")
@@ -94,14 +93,14 @@ class RobotOrchestrator:
     def monitor_topic(self, topic: str, *, duration_seconds: int = 10) -> CommandResult:
         return self.runner.run(["timeout", str(duration_seconds), "ros2", "topic", "echo", topic], check=False, log_name=f"topic_{topic.strip('/').replace('/', '_')}")
 
-    def collect_logs(self) -> dict[str, Any]:
+    def collect_logs(self) -> Dict[str, Any]:
         self.config.workspace.report_dir.mkdir(parents=True, exist_ok=True)
         report = analyze_logs(self.config.workspace.log_dir)
         path = self.config.workspace.report_dir / "latest.json"
         path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
         return {"report_path": str(path), **report}
 
-    def update_memory(self, profile: RobotProfile, analysis: dict[str, Any]) -> dict[str, Any]:
+    def update_memory(self, profile: RobotProfile, analysis: Dict[str, Any]) -> Dict[str, Any]:
         run_id = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
         record = {"run_id": run_id, "profile": profile.name, "robot_type": profile.robot_type, "analysis": analysis}
         self.memory.append_run(record)
@@ -121,7 +120,7 @@ class RobotOrchestrator:
         run_hook("on_learning_update", self.runner, record)
         return {"run_id": run_id}
 
-    def run_scenario(self, profile_name: str, *, confirmed: bool = False, monitor_seconds: int = 10) -> dict[str, Any]:
+    def run_scenario(self, profile_name: str, *, confirmed: bool = False, monitor_seconds: int = 10) -> Dict[str, Any]:
         profile = self.config.profile(profile_name)
         self.build_source()
         self.run_lint_tests()

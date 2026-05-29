@@ -6,6 +6,8 @@ This workspace contains a ROS2 robot test toolkit with:
 - A TypeScript MCP server exposing robot test tools, resources, and prompts over local `stdio` and remote Streamable HTTP with legacy SSE compatibility.
 - VS Code tasks, Codex skill/instructions, and agent lifecycle hooks.
 
+Python runtime baseline: Python 3.8 or newer.
+
 Start with dry-run commands until robot profiles are configured:
 
 ```bash

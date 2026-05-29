@@ -6,6 +6,7 @@ import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Dict, List, Optional
 
 from .errors import CommandError
 
@@ -15,7 +16,7 @@ SECRET_MARKERS = ("PASSWORD", "TOKEN", "SECRET", "KEY")
 
 @dataclass(frozen=True)
 class CommandResult:
-    command: list[str]
+    command: List[str]
     returncode: int
     stdout: str
     stderr: str
@@ -26,7 +27,7 @@ class CommandResult:
     def ok(self) -> bool:
         return self.returncode == 0
 
-    def summary(self) -> dict[str, object]:
+    def summary(self) -> Dict[str, object]:
         return {
             "command": " ".join(shlex.quote(part) for part in self.command),
             "returncode": self.returncode,
@@ -36,7 +37,7 @@ class CommandResult:
 
 
 class CommandRunner:
-    def __init__(self, cwd: Path, dry_run: bool = False, log_dir: Path | None = None) -> None:
+    def __init__(self, cwd: Path, dry_run: bool = False, log_dir: Optional[Path] = None) -> None:
         self.cwd = cwd
         self.dry_run = dry_run
         self.log_dir = log_dir
@@ -45,12 +46,12 @@ class CommandRunner:
 
     def run(
         self,
-        command: list[str],
+        command: List[str],
         *,
-        timeout: int | None = None,
+        timeout: Optional[int] = None,
         check: bool = True,
-        env: dict[str, str] | None = None,
-        log_name: str | None = None,
+        env: Optional[Dict[str, str]] = None,
+        log_name: Optional[str] = None,
     ) -> CommandResult:
         safe_env = self._clean_env(env)
         started = time.monotonic()
@@ -80,13 +81,13 @@ class CommandRunner:
             raise CommandError(f"command failed ({result.returncode}): {self._format(command)}")
         return result
 
-    def _clean_env(self, env: dict[str, str] | None) -> dict[str, str]:
+    def _clean_env(self, env: Optional[Dict[str, str]]) -> Dict[str, str]:
         merged = os.environ.copy()
         if env:
             merged.update(env)
         return merged
 
-    def _write_log(self, name: str | None, result: CommandResult) -> None:
+    def _write_log(self, name: Optional[str], result: CommandResult) -> None:
         if not name or not self.log_dir:
             return
         path = self.log_dir / f"{name}.log"
@@ -102,7 +103,7 @@ class CommandRunner:
         path.write_text("\n".join(content), encoding="utf-8")
 
     @staticmethod
-    def _format(command: list[str]) -> str:
+    def _format(command: List[str]) -> str:
         return " ".join(shlex.quote(part) for part in command)
 
     @staticmethod
@@ -111,4 +112,3 @@ class CommandRunner:
         for marker in SECRET_MARKERS:
             redacted = redacted.replace(marker.lower(), marker.lower())
         return redacted
-

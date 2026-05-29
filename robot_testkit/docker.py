@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from .runner import CommandResult, CommandRunner
 
 
-def build_docker_run_command(launch: dict[str, Any]) -> list[str]:
+def build_docker_run_command(launch: Dict[str, Any]) -> List[str]:
     command = ["docker", "run"]
     if launch.get("detach", True):
         command.append("-d")
@@ -30,7 +30,7 @@ def build_docker_run_command(launch: dict[str, Any]) -> list[str]:
     return command
 
 
-def ensure_docker_network(runner: CommandRunner, network: str | None, log_prefix: str) -> None:
+def ensure_docker_network(runner: CommandRunner, network: Optional[str], log_prefix: str) -> None:
     if not network:
         return
     inspect = runner.run(["docker", "network", "inspect", network], check=False, log_name=f"{log_prefix}_network_inspect")
@@ -38,8 +38,7 @@ def ensure_docker_network(runner: CommandRunner, network: str | None, log_prefix
         runner.run(["docker", "network", "create", network], log_name=f"{log_prefix}_network_create")
 
 
-def remove_existing_container(runner: CommandRunner, name: str | None, log_prefix: str) -> None:
+def remove_existing_container(runner: CommandRunner, name: Optional[str], log_prefix: str) -> None:
     if not name:
         return
     runner.run(["docker", "rm", "-f", name], check=False, log_name=f"{log_prefix}_container_replace")
-
