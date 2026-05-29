@@ -16,6 +16,8 @@ class WorkspaceConfig:
     colcon_ros_setup: str = ""
     runtime_ros_setup: str = ""
     workspace_setup: str = "install/setup.bash"
+    build_package_selector: str = "--packages-up-to"
+    lint_package_selector: str = "--packages-select"
     build_args: List[str] = field(default_factory=list)
     lint_test_args: List[str] = field(default_factory=list)
     log_dir: Path = Path("logs")
@@ -107,6 +109,8 @@ def load_config(path: Union[str, Path] = "config/robot-testkit.yaml") -> RobotTe
         colcon_ros_setup=workspace_raw.get("colcon_ros_setup", ""),
         runtime_ros_setup=workspace_raw.get("runtime_ros_setup", ""),
         workspace_setup=workspace_raw.get("workspace_setup", "install/setup.bash"),
+        build_package_selector=workspace_raw.get("build_package_selector", "--packages-up-to"),
+        lint_package_selector=workspace_raw.get("lint_package_selector", "--packages-select"),
         build_args=list(workspace_raw.get("build_args", [])),
         lint_test_args=list(workspace_raw.get("lint_test_args", [])),
         log_dir=_as_path(workspace_root, workspace_raw.get("log_dir", "logs")),

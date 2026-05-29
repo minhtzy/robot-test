@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from .config import RobotProfile
+from .config import RobotProfile, WorkspaceConfig
 from .errors import ConfigError
 
 
@@ -13,9 +13,15 @@ def selected_packages(profile: Optional[RobotProfile], kind: str) -> List[str]:
     return list(dict.fromkeys(packages))
 
 
-def colcon_packages_args(profile: Optional[RobotProfile], kind: str) -> List[str]:
+def colcon_packages_args(profile: Optional[RobotProfile], kind: str, workspace: Optional[WorkspaceConfig] = None) -> List[str]:
     packages = selected_packages(profile, kind)
-    return ["--packages-select"] + packages if packages else []
+    if not packages:
+        return []
+    if kind == "build":
+        selector = workspace.build_package_selector if workspace else "--packages-up-to"
+    else:
+        selector = workspace.lint_package_selector if workspace else "--packages-select"
+    return [selector] + packages
 
 
 def select_nodes(profile: RobotProfile, node_names: Optional[List[str]] = None) -> List[Dict[str, Any]]:
@@ -39,13 +45,17 @@ def assert_topic_allowed(profile: RobotProfile, topic: str) -> None:
         raise ConfigError("topic '{}' is not configured for profile '{}'".format(topic, profile.name))
 
 
-def describe_profile_targets(profile: RobotProfile) -> Dict[str, Any]:
+def describe_profile_targets(profile: RobotProfile, workspace: Optional[WorkspaceConfig] = None) -> Dict[str, Any]:
+    build_selector = workspace.build_package_selector if workspace else "--packages-up-to"
+    lint_selector = workspace.lint_package_selector if workspace else "--packages-select"
     return {
         "profile": profile.name,
         "robot_type": profile.robot_type,
         "target": profile.target,
         "build_packages": profile.build_packages,
+        "build_package_selector": build_selector,
         "lint_packages": profile.lint_packages,
+        "lint_package_selector": lint_selector,
         "nodes": [
             {
                 "name": node["name"],

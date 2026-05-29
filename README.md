@@ -16,7 +16,8 @@ ROS2 environment sourcing:
 
 Robot targets are resolved from each profile before execution:
 
-- `build_packages` and `lint_packages` become `colcon ... --packages-select ...`.
+- `build_packages` become `colcon build --packages-up-to ...` by default, so dependencies are built when needed.
+- `lint_packages` become `colcon test --packages-select ...` by default.
 - `nodes` define the exact `ros2 run PACKAGE EXECUTABLE` calls.
 - `services` define allowed service names plus default type/payload.
 - `monitor_topics` defines topics allowed for `ros2 topic echo`.

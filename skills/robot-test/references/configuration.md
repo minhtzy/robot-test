@@ -7,7 +7,8 @@ Robot profiles live in `config/robot-testkit.yaml`.
 - FANUC uses `launch.mode: fanuc_bridge`.
 - Real robot profiles use `target: real` and must include a narrow `allowlist_services` list.
 - Browser credentials come from env vars configured by `browser.username_env` and `browser.password_env`.
-- `build_packages` and `lint_packages` define the exact ROS2 packages selected with `colcon ... --packages-select`.
+- `build_packages` define the ROS2 packages selected with `colcon build --packages-up-to` by default, so dependencies are built when needed.
+- `lint_packages` define the ROS2 packages selected with `colcon test --packages-select` by default.
 - `nodes` define exact `ros2 run` targets by name, package, executable, and args.
 - `services` define exact service name, type, and default payload.
 - `monitor_topics` defines the topics that may be watched for that profile.

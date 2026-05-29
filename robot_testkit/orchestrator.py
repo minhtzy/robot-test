@@ -53,17 +53,17 @@ class RobotOrchestrator:
         ]
 
     def describe_targets(self, profile: RobotProfile) -> Dict[str, Any]:
-        return describe_profile_targets(profile)
+        return describe_profile_targets(profile, self.config.workspace)
 
     def build_source(self, profile: Optional[RobotProfile] = None) -> CommandResult:
         run_hook("pre_build", self.runner)
-        command = ["colcon", "build", *colcon_packages_args(profile, "build"), *self.config.workspace.build_args]
+        command = ["colcon", "build", *colcon_packages_args(profile, "build", self.config.workspace), *self.config.workspace.build_args]
         result = self.runner.run_with_sources(command, self._colcon_sources(), timeout=None, log_name="colcon_build")
         run_hook("post_build", self.runner, result.summary())
         return result
 
     def run_lint_tests(self, profile: Optional[RobotProfile] = None) -> CommandResult:
-        command = ["colcon", "test", *colcon_packages_args(profile, "lint"), *self.config.workspace.lint_test_args]
+        command = ["colcon", "test", *colcon_packages_args(profile, "lint", self.config.workspace), *self.config.workspace.lint_test_args]
         result = self.runner.run_with_sources(command, self._colcon_sources(), timeout=None, log_name="colcon_test_lint")
         run_hook("post_lint", self.runner, result.summary())
         return result

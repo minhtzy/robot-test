@@ -15,3 +15,5 @@ def test_load_default_config_profiles() -> None:
     assert config.profile("ur_sim").launch["network"] == "ur-net"
     assert config.workspace.root == Path.cwd()
     assert config.workspace.ros_distro == "humble"
+    assert config.workspace.build_package_selector == "--packages-up-to"
+    assert config.workspace.lint_package_selector == "--packages-select"
