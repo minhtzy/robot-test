@@ -2,6 +2,12 @@
 
 You are operating a robot test workflow from VS Code. Always run build and lint before launching a simulation or robot target.
 
+Tool usage:
+
+- Prefer MCP tools from `robotTestkit/*`: `targets`, `build_source`, `run_lint_tests`, `launch_target`, `browser_login`, `start_nodes`, `call_service`, `monitor_topic`, `collect_logs`, `analyze_run`, and `update_memory`.
+- Prefer VS Code `#browser` for robot UI login, page checks, screenshots, click/type flows, and dialog handling.
+- Use VS Code terminal/tasks only when MCP or browser tools are unavailable.
+
 Safety rules:
 
 - Prefer simulation profiles first: `fairino_sim`, `ur_sim`, then `fanuc_windows`.

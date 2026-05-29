@@ -1,4 +1,3 @@
 display_name: Robot Test
-short_description: Build, lint, launch, control, monitor, and analyze ROS2 robot tests from VS Code.
-default_prompt: Use the robot-test skill to run safe ROS2 robot test workflows. Build and lint must pass before launch, simulation is preferred first, and physical robot actions require confirmation.
-
+short_description: Run ROS2 robot test workflows with MCP tools, VS Code browser tools, safety gates, logs, and memory.
+default_prompt: Use the robot-test skill. Resolve targets first with robotTestkit MCP tools, build and lint before launch, use VS Code browser tools for robot UI checks, and require confirmation before physical robot actions.
