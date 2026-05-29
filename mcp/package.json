@@ -6,8 +6,8 @@
   "description": "MCP server for Robot Testkit.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start:stdio": "node dist/src/server.js --transport stdio",
-    "start:http": "node dist/src/server.js --transport http --port 3333",
+    "start:stdio": "npm run build && node dist/src/server.js --transport stdio",
+    "start:http": "npm run build && node dist/src/server.js --transport http --port 3333",
     "test": "node --test dist/tests/*.test.js"
   },
   "dependencies": {
