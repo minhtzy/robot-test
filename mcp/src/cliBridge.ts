@@ -20,6 +20,7 @@ export function repoRoot(): string {
 
 export async function runRobotCli(args: string[], options: RobotToolOptions = {}): Promise<CliResult> {
   const root = repoRoot();
+  const python = process.env.ROBOT_TESTKIT_PYTHON || process.env.PYTHON || "python3";
   const cliArgs = ["-m", "robot_testkit.cli"];
   if (options.config) {
     cliArgs.push("--config", options.config);
@@ -30,7 +31,7 @@ export async function runRobotCli(args: string[], options: RobotToolOptions = {}
   cliArgs.push(...args);
 
   return new Promise((resolve) => {
-    const child = spawn("python", cliArgs, {
+    const child = spawn(python, cliArgs, {
       cwd: root,
       stdio: ["ignore", "pipe", "pipe"],
       env: process.env
@@ -66,4 +67,3 @@ export function toolResponse(result: CliResult) {
     isError: !result.ok
   };
 }
-

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import sys
 import webbrowser
 from dataclasses import dataclass
 
@@ -39,7 +40,7 @@ def browser_login(config: BrowserConfig, runner: CommandRunner) -> BrowserLoginR
         return BrowserLoginResult("vscode", True, "opened login URL with VS Code browser tool command")
 
     if adapter == "playwright":
-        runner.run(["python", "-m", "robot_testkit.playwright_login", config.login_url], check=False, log_name="browser_playwright")
+        runner.run([sys.executable, "-m", "robot_testkit.playwright_login", config.login_url], check=False, log_name="browser_playwright")
         return BrowserLoginResult("playwright", True, "opened login URL with Playwright")
 
     if not runner.dry_run:

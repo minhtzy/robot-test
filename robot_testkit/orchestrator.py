@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import time
 from typing import Any, Dict, List, Optional
 
@@ -19,7 +20,7 @@ def run_hook(name: str, runner: CommandRunner, payload: Optional[Dict[str, Any]]
     if not hook.exists():
         return None
     env = {"ROBOT_TESTKIT_HOOK_PAYLOAD": json.dumps(payload or {})}
-    return runner.run(["python", str(hook)], check=False, env=env, log_name=f"hook_{name}")
+    return runner.run([sys.executable, str(hook)], check=False, env=env, log_name=f"hook_{name}")
 
 
 class RobotOrchestrator:

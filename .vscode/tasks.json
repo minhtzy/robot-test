@@ -4,57 +4,57 @@
     {
       "label": "Robot: Build",
       "type": "shell",
-      "command": "python -m robot_testkit.cli build",
+      "command": "python3 -m robot_testkit.cli build",
       "group": "build",
       "problemMatcher": []
     },
     {
       "label": "Robot: Lint Test",
       "type": "shell",
-      "command": "python -m robot_testkit.cli lint",
+      "command": "python3 -m robot_testkit.cli lint",
       "group": "test",
       "problemMatcher": []
     },
     {
       "label": "Robot: Launch Fairino Simulation",
       "type": "shell",
-      "command": "python -m robot_testkit.cli launch --profile fairino_sim",
+      "command": "python3 -m robot_testkit.cli launch --profile fairino_sim",
       "problemMatcher": []
     },
     {
       "label": "Robot: Launch UR Simulation",
       "type": "shell",
-      "command": "python -m robot_testkit.cli launch --profile ur_sim",
+      "command": "python3 -m robot_testkit.cli launch --profile ur_sim",
       "problemMatcher": []
     },
     {
       "label": "Robot: Run FANUC Via Windows Bridge",
       "type": "shell",
-      "command": "python -m robot_testkit.cli launch --profile fanuc_windows",
+      "command": "python3 -m robot_testkit.cli launch --profile fanuc_windows",
       "problemMatcher": []
     },
     {
       "label": "Robot: Run Scenario",
       "type": "shell",
-      "command": "python -m robot_testkit.cli run-scenario --profile ${input:robotProfile}",
+      "command": "python3 -m robot_testkit.cli run-scenario --profile ${input:robotProfile}",
       "problemMatcher": []
     },
     {
       "label": "Robot: Collect Logs",
       "type": "shell",
-      "command": "python -m robot_testkit.cli collect-logs",
+      "command": "python3 -m robot_testkit.cli collect-logs",
       "problemMatcher": []
     },
     {
       "label": "Robot: Analyze Latest Run",
       "type": "shell",
-      "command": "python -m robot_testkit.cli analyze",
+      "command": "python3 -m robot_testkit.cli analyze",
       "problemMatcher": []
     },
     {
       "label": "Robot: Start MCP stdio",
       "type": "shell",
-      "command": "python scripts/start_mcp_stdio.py",
+      "command": "python3 scripts/start_mcp_stdio.py",
       "isBackground": true,
       "problemMatcher": []
     },

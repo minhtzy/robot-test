@@ -11,7 +11,7 @@ Python runtime baseline: Python 3.8 or newer.
 Start with dry-run commands until robot profiles are configured:
 
 ```bash
-python -m robot_testkit.cli run-scenario --profile fairino_sim --dry-run
+python3 -m robot_testkit.cli run-scenario --profile fairino_sim --dry-run
 ```
 
 Real robot actions require an explicit `--confirm` flag and must be allowlisted in `config/robot-testkit.yaml`.

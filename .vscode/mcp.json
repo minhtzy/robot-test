@@ -2,12 +2,13 @@
   "servers": {
     "robotTestkit": {
       "type": "stdio",
-      "command": "python",
+      "command": "python3",
       "args": [
         "${workspaceFolder}/scripts/start_mcp_stdio.py"
       ],
       "env": {
-        "ROBOT_TESTKIT_CONFIG": "${workspaceFolder}/config/robot-testkit.yaml"
+        "ROBOT_TESTKIT_CONFIG": "${workspaceFolder}/config/robot-testkit.yaml",
+        "ROBOT_TESTKIT_PYTHON": "python3"
       },
       "dev": {
         "watch": "${workspaceFolder}/mcp/src/**/*.ts",
