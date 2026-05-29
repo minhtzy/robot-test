@@ -24,6 +24,8 @@ Robot targets are resolved from each profile before execution:
 
 Full workflow: [docs/test-workflow.md](docs/test-workflow.md).
 
+Long-running MCP tools support `asyncRun: true`. Async calls return a `runId` immediately; use `job_status`, `job_logs`, and `job_cancel` to monitor or stop the run.
+
 Start with dry-run commands until robot profiles are configured:
 
 ```bash

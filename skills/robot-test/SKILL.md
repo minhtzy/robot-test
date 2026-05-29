@@ -15,12 +15,24 @@ Use this skill for robot test work in this workspace. Prefer MCP tools from the 
 
 Do not invent package, node, service, or topic targets. Resolve them from `targets` or `config/robot-testkit.yaml`.
 
+## Long-Running Tools
+
+For build, lint/test, launch, scenario, node, service, topic, collect, analyze, or memory operations that may run for a long time, set `asyncRun: true` on the MCP tool.
+
+Async tools return a `runId` immediately. Use:
+
+- `job_status` to see whether the run is `running`, `completed`, `failed`, or `cancelled`
+- `job_logs` to read recent output while it is running
+- `job_cancel` to stop a running job
+
+When using async mode, report the `runId` to the user and poll logs/status instead of waiting silently.
+
 ## MCP Workflow
 
 1. Select a profile, normally `fairino_sim`, `ur_sim`, then `fanuc_windows`; use real robot profiles only after simulation passes.
 2. Call `targets` for the selected profile and review build packages, lint packages, nodes, services, and topics.
-3. Call `build_source` with the profile. Build uses `colcon build --packages-up-to` so dependencies are built when needed.
-4. Call `run_lint_tests` with the profile. Lint/test uses `colcon test --packages-select`.
+3. Call `build_source` with the profile, preferably `asyncRun: true`. Build uses `colcon build --packages-up-to` so dependencies are built when needed.
+4. Call `run_lint_tests` with the profile, preferably `asyncRun: true`. Lint/test uses `colcon test --packages-select`.
 5. Only if build and lint pass, launch the target.
 6. Call `launch_target` for simulation/bridge/attach.
 7. Use VS Code `#browser` for robot UI login and verification when available; otherwise call `browser_login`.

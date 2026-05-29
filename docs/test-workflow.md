@@ -46,6 +46,8 @@ colcon build --packages-up-to ...
 
 Stop the workflow if build fails. Collect logs before retrying.
 
+When running through MCP, use `asyncRun: true` for build. The tool returns a `runId`; monitor with `job_status` and `job_logs`.
+
 ## 3. Lint/Test
 
 Run lint/test for the selected profile packages:
@@ -62,6 +64,8 @@ colcon test --packages-select ...
 ```
 
 Stop the workflow if lint/test fails. Do not launch simulation or robot until build and lint pass.
+
+When running through MCP, use `asyncRun: true` for lint/test and monitor with `job_status` and `job_logs`.
 
 ## 4. Launch Target
 
@@ -204,3 +208,21 @@ Review the generated commands for:
 - `colcon test --packages-select`
 - expected `ros2 run`, `ros2 service`, and `ros2 topic` targets
 
+## MCP Async Jobs
+
+Long-running MCP tools support `asyncRun: true`.
+
+Example:
+
+```json
+{
+  "profile": "fairino_sim",
+  "asyncRun": true
+}
+```
+
+The tool returns a `runId`. Use:
+
+- `job_status` to check current state
+- `job_logs` to view recent output
+- `job_cancel` to stop a running job

@@ -13,6 +13,8 @@ logs/
 reports/
 .robot-test-memory/*.jsonl
 .robot-test-memory/*.json
+!.robot-test-memory/jobs/
+.robot-test-memory/jobs/*.json
 !.robot-test-memory/.gitkeep
 *.log
 .DS_Store
