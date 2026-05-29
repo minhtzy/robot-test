@@ -17,15 +17,7 @@ Do not invent package, node, service, or topic targets. Resolve them from `targe
 
 ## Long-Running Tools
 
-Build, lint/test, launch, scenario, node, service, topic, collect, analyze, and memory MCP tools run async by default.
-
-Async tools return a `runId` immediately. Use:
-
-- `job_status` to see whether the run is `running`, `completed`, `failed`, or `cancelled`
-- `job_logs` to read recent output while it is running
-- `job_cancel` to stop a running job
-
-Report the `runId` to the user and poll logs/status instead of waiting silently. Pass `asyncRun: false` only when a synchronous call is explicitly needed.
+MCP tools are synchronous request/response calls. For long-running build, lint/test, launch, or scenario work where the user needs live progress without polling, use VS Code tasks or terminal commands instead of MCP.
 
 ## MCP Workflow
 

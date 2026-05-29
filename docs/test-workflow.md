@@ -46,7 +46,7 @@ colcon build --packages-up-to ...
 
 Stop the workflow if build fails. Collect logs before retrying.
 
-When running through MCP, build runs async by default. The tool returns a `runId`; monitor with `job_status` and `job_logs`.
+When live build output is needed without polling, run the VS Code task or CLI command in a terminal.
 
 ## 3. Lint/Test
 
@@ -65,7 +65,7 @@ colcon test --packages-select ...
 
 Stop the workflow if lint/test fails. Do not launch simulation or robot until build and lint pass.
 
-When running through MCP, lint/test runs async by default. Monitor with `job_status` and `job_logs`.
+When live lint/test output is needed without polling, run the VS Code task or CLI command in a terminal.
 
 ## 4. Launch Target
 
@@ -208,23 +208,14 @@ Review the generated commands for:
 - `colcon test --packages-select`
 - expected `ros2 run`, `ros2 service`, and `ros2 topic` targets
 
-## MCP Async Jobs
+## Long-Running Commands Without Polling
 
-Long-running MCP tools run async by default.
+MCP tool calls are synchronous request/response calls. If you do not want polling and need live output, use VS Code tasks or terminal commands:
 
-They return a `runId`. Use:
+- `Robot: Build`
+- `Robot: Lint Test`
+- `Robot: Run Scenario`
+- `python3 -m robot_testkit.cli build --profile fairino_sim`
+- `python3 -m robot_testkit.cli lint --profile fairino_sim`
 
-- `job_status` to check current state
-- `job_logs` to view recent output
-- `job_cancel` to stop a running job
-
-Pass `asyncRun: false` only when you explicitly want the MCP call to wait for command completion.
-
-Synchronous override example:
-
-```json
-{
-  "profile": "fairino_sim",
-  "asyncRun": false
-}
-```
+Use MCP for structured orchestration when waiting for the final result is acceptable. Use VS Code terminal/tasks when progress visibility matters.

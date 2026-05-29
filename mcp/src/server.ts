@@ -7,22 +7,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
-import { shouldRunAsync } from "./asyncOptions.js";
 import { repoRoot, runRobotCli, toolResponse } from "./cliBridge.js";
-import { cancelJob, getJobStatus, readJobLogs, startRobotCliJob } from "./jobManager.js";
 
 const CommonOptions = {
   config: z.string().optional(),
-  dryRun: z.boolean().default(false),
-  asyncRun: z.boolean().optional()
+  dryRun: z.boolean().default(false)
 };
-
-async function runCliTool(args: string[], options: { config?: string; dryRun?: boolean; asyncRun?: boolean; label?: string; defaultAsync?: boolean }) {
-  if (shouldRunAsync(options.asyncRun, options.defaultAsync)) {
-    return toolResponse({ ok: true, exitCode: 0, stdout: "", stderr: "", json: await startRobotCliJob(args, options) });
-  }
-  return toolResponse(await runRobotCli(args, options));
-}
 
 function createServer(): McpServer {
   const server = new McpServer({ name: "robot-testkit", version: "0.1.0" });
@@ -30,19 +20,19 @@ function createServer(): McpServer {
   server.registerTool("build_source", {
     description: "Run colcon build for the ROS2 workspace.",
     inputSchema: { ...CommonOptions, profile: z.string().optional() }
-  }, async ({ config, dryRun, asyncRun, profile }) => {
+  }, async ({ config, dryRun, profile }) => {
     const args = ["build"];
     if (profile) args.push("--profile", profile);
-    return runCliTool(args, { config, dryRun, asyncRun, label: "build", defaultAsync: true });
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
   });
 
   server.registerTool("run_lint_tests", {
     description: "Run colcon test with lint options from config.",
     inputSchema: { ...CommonOptions, profile: z.string().optional() }
-  }, async ({ config, dryRun, asyncRun, profile }) => {
+  }, async ({ config, dryRun, profile }) => {
     const args = ["lint"];
     if (profile) args.push("--profile", profile);
-    return runCliTool(args, { config, dryRun, asyncRun, label: "lint", defaultAsync: true });
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
   });
 
   server.registerTool("targets", {
@@ -53,20 +43,20 @@ function createServer(): McpServer {
   server.registerTool("launch_target", {
     description: "Launch simulation, attach to a real robot, or call the FANUC Windows bridge.",
     inputSchema: { ...CommonOptions, profile: z.string() }
-  }, async ({ config, dryRun, asyncRun, profile }) => runCliTool(["launch", "--profile", profile], { config, dryRun, asyncRun, label: "launch", defaultAsync: true }));
+  }, async ({ config, dryRun, profile }) => toolResponse(await runRobotCli(["launch", "--profile", profile], { config, dryRun })));
 
   server.registerTool("browser_login", {
     description: "Open robot browser login using VS Code browser tool, Playwright, or system browser fallback.",
     inputSchema: { ...CommonOptions, profile: z.string().optional() }
-  }, async ({ config, dryRun, asyncRun }) => runCliTool(["browser-login"], { config, dryRun, asyncRun, label: "browser-login", defaultAsync: true }));
+  }, async ({ config, dryRun }) => toolResponse(await runRobotCli(["browser-login"], { config, dryRun })));
 
   server.registerTool("start_nodes", {
     description: "Start configured ROS2 nodes with ros2 run.",
     inputSchema: { ...CommonOptions, profile: z.string(), nodes: z.array(z.string()).optional() }
-  }, async ({ config, dryRun, asyncRun, profile, nodes }) => {
+  }, async ({ config, dryRun, profile, nodes }) => {
     const args = ["start-nodes", "--profile", profile];
     for (const node of nodes ?? []) args.push("--node", node);
-    return runCliTool(args, { config, dryRun, asyncRun, label: "start-nodes", defaultAsync: true });
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
   });
 
   server.registerTool("call_service", {
@@ -79,61 +69,46 @@ function createServer(): McpServer {
       payload: z.string().optional(),
       confirm: z.boolean().default(false)
     }
-  }, async ({ config, dryRun, asyncRun, profile, service, serviceType, payload, confirm }) => {
+  }, async ({ config, dryRun, profile, service, serviceType, payload, confirm }) => {
     const args = ["call-service", "--profile", profile, "--service", service];
     if (serviceType !== undefined) args.push("--type", serviceType);
     if (payload !== undefined) args.push("--payload", payload);
     if (confirm) args.push("--confirm");
-    return runCliTool(args, { config, dryRun, asyncRun, label: "service", defaultAsync: true });
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
   });
 
   server.registerTool("monitor_topic", {
     description: "Monitor a ROS2 topic for a bounded duration.",
     inputSchema: { ...CommonOptions, profile: z.string().optional(), topic: z.string(), seconds: z.number().int().positive().default(10) }
-  }, async ({ config, dryRun, asyncRun, profile, topic, seconds }) => {
+  }, async ({ config, dryRun, profile, topic, seconds }) => {
     const args = ["monitor-topic", "--topic", topic, "--seconds", String(seconds)];
     if (profile) args.push("--profile", profile);
-    return runCliTool(args, { config, dryRun, asyncRun, label: "topic", defaultAsync: true });
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
   });
 
   server.registerTool("collect_logs", {
     description: "Collect and analyze latest logs into reports/latest.json.",
     inputSchema: CommonOptions
-  }, async ({ config, dryRun, asyncRun }) => runCliTool(["collect-logs"], { config, dryRun, asyncRun, label: "collect-logs", defaultAsync: true }));
+  }, async ({ config, dryRun }) => toolResponse(await runRobotCli(["collect-logs"], { config, dryRun })));
 
   server.registerTool("analyze_run", {
     description: "Analyze latest run logs and return pass/fail findings.",
     inputSchema: CommonOptions
-  }, async ({ config, dryRun, asyncRun }) => runCliTool(["analyze"], { config, dryRun, asyncRun, label: "analyze", defaultAsync: true }));
+  }, async ({ config, dryRun }) => toolResponse(await runRobotCli(["analyze"], { config, dryRun })));
 
   server.registerTool("run_scenario", {
     description: "Run build, lint, launch, browser login, nodes, topic monitor, analysis, and memory update.",
     inputSchema: { ...CommonOptions, profile: z.string(), confirm: z.boolean().default(false), monitorSeconds: z.number().int().positive().default(10) }
-  }, async ({ config, dryRun, asyncRun, profile, confirm, monitorSeconds }) => {
+  }, async ({ config, dryRun, profile, confirm, monitorSeconds }) => {
     const args = ["run-scenario", "--profile", profile, "--monitor-seconds", String(monitorSeconds)];
     if (confirm) args.push("--confirm");
-    return runCliTool(args, { config, dryRun, asyncRun, label: "scenario", defaultAsync: true });
+    return toolResponse(await runRobotCli(args, { config, dryRun }));
   });
 
   server.registerTool("update_memory", {
     description: "Persist the latest analyzed run outcome to local memory.",
     inputSchema: { ...CommonOptions, profile: z.string() }
-  }, async ({ config, dryRun, asyncRun, profile }) => runCliTool(["update-memory", "--profile", profile], { config, dryRun, asyncRun, label: "memory", defaultAsync: true }));
-
-  server.registerTool("job_status", {
-    description: "Return status for an async robot test job.",
-    inputSchema: { runId: z.string() }
-  }, async ({ runId }) => toolResponse({ ok: true, exitCode: 0, stdout: "", stderr: "", json: await getJobStatus(runId) }));
-
-  server.registerTool("job_logs", {
-    description: "Return recent log lines for an async robot test job.",
-    inputSchema: { runId: z.string(), tailLines: z.number().int().positive().default(80) }
-  }, async ({ runId, tailLines }) => toolResponse({ ok: true, exitCode: 0, stdout: "", stderr: "", json: await readJobLogs(runId, tailLines) }));
-
-  server.registerTool("job_cancel", {
-    description: "Cancel a running async robot test job.",
-    inputSchema: { runId: z.string() }
-  }, async ({ runId }) => toolResponse({ ok: true, exitCode: 0, stdout: "", stderr: "", json: await cancelJob(runId) }));
+  }, async ({ config, dryRun, profile }) => toolResponse(await runRobotCli(["update-memory", "--profile", profile], { config, dryRun })));
 
   server.registerResource("robot-profiles", "robot://profiles", {
     description: "Robot profiles from config/robot-testkit.yaml",

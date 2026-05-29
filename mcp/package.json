@@ -5,7 +5,8 @@
   "type": "module",
   "description": "MCP server for Robot Testkit.",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "start:stdio": "npm run build && node dist/src/server.js --transport stdio",
     "start:http": "npm run build && node dist/src/server.js --transport http --port 3333",
     "test": "node --test dist/tests/*.test.js"
