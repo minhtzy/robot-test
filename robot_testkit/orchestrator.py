@@ -4,6 +4,7 @@ import json
 import sys
 import time
 from typing import Any, Dict, List, Optional
+from pathlib import Path
 
 from .analyzer import analyze_logs
 from .browser import browser_login
@@ -29,14 +30,28 @@ class RobotOrchestrator:
         self.runner = CommandRunner(config.workspace.root, dry_run=dry_run, log_dir=config.workspace.log_dir)
         self.memory = MemoryStore(config.workspace.memory_dir)
 
+    def _resolve_source(self, value: str) -> Path:
+        resolved = value.format(ros_distro=self.config.workspace.ros_distro)
+        path = Path(resolved)
+        return path if path.is_absolute() else self.config.workspace.root / path
+
+    def _colcon_sources(self) -> List[Path]:
+        return [self._resolve_source(self.config.workspace.colcon_ros_setup)]
+
+    def _runtime_sources(self) -> List[Path]:
+        return [
+            self._resolve_source(self.config.workspace.runtime_ros_setup),
+            self._resolve_source(self.config.workspace.workspace_setup),
+        ]
+
     def build_source(self) -> CommandResult:
         run_hook("pre_build", self.runner)
-        result = self.runner.run(["colcon", "build", *self.config.workspace.build_args], timeout=None, log_name="colcon_build")
+        result = self.runner.run_with_sources(["colcon", "build", *self.config.workspace.build_args], self._colcon_sources(), timeout=None, log_name="colcon_build")
         run_hook("post_build", self.runner, result.summary())
         return result
 
     def run_lint_tests(self) -> CommandResult:
-        result = self.runner.run(["colcon", "test", *self.config.workspace.lint_test_args], timeout=None, log_name="colcon_test_lint")
+        result = self.runner.run_with_sources(["colcon", "test", *self.config.workspace.lint_test_args], self._colcon_sources(), timeout=None, log_name="colcon_test_lint")
         run_hook("post_lint", self.runner, result.summary())
         return result
 
@@ -79,7 +94,7 @@ class RobotOrchestrator:
         results: List[Dict[str, Any]] = []
         for node in profile.nodes:
             command = ["ros2", "run", node["package"], node["executable"], *node.get("args", [])]
-            result = self.runner.run(command, check=False, log_name=f"node_{node['name']}")
+            result = self.runner.run_with_sources(command, self._runtime_sources(), check=False, log_name=f"node_{node['name']}")
             results.append({"name": node["name"], **result.summary()})
         return results
 
@@ -87,12 +102,21 @@ class RobotOrchestrator:
         assert_service_allowed(service, profile)
         assert_confirmation(service, profile, confirmed)
         run_hook("pre_robot_action", self.runner, {"profile": profile.name, "service": service})
-        result = self.runner.run(["ros2", "service", "call", service, service_type, payload], log_name=f"service_{service.strip('/').replace('/', '_')}")
+        result = self.runner.run_with_sources(
+            ["ros2", "service", "call", service, service_type, payload],
+            self._runtime_sources(),
+            log_name=f"service_{service.strip('/').replace('/', '_')}",
+        )
         run_hook("post_robot_action", self.runner, result.summary())
         return result
 
     def monitor_topic(self, topic: str, *, duration_seconds: int = 10) -> CommandResult:
-        return self.runner.run(["timeout", str(duration_seconds), "ros2", "topic", "echo", topic], check=False, log_name=f"topic_{topic.strip('/').replace('/', '_')}")
+        return self.runner.run_with_sources(
+            ["timeout", str(duration_seconds), "ros2", "topic", "echo", topic],
+            self._runtime_sources(),
+            check=False,
+            log_name=f"topic_{topic.strip('/').replace('/', '_')}",
+        )
 
     def collect_logs(self) -> Dict[str, Any]:
         self.config.workspace.report_dir.mkdir(parents=True, exist_ok=True)

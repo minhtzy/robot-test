@@ -12,7 +12,10 @@ from .errors import ConfigError
 @dataclass(frozen=True)
 class WorkspaceConfig:
     root: Path
-    ros_setup: str = ""
+    ros_distro: str = "humble"
+    colcon_ros_setup: str = ""
+    runtime_ros_setup: str = ""
+    workspace_setup: str = "install/setup.bash"
     build_args: List[str] = field(default_factory=list)
     lint_test_args: List[str] = field(default_factory=list)
     log_dir: Path = Path("logs")
@@ -85,7 +88,10 @@ def load_config(path: Union[str, Path] = "config/robot-testkit.yaml") -> RobotTe
     workspace_root = _as_path(base, workspace_raw.get("root", ".")).resolve()
     workspace = WorkspaceConfig(
         root=workspace_root,
-        ros_setup=workspace_raw.get("ros_setup", ""),
+        ros_distro=workspace_raw.get("ros_distro", "humble"),
+        colcon_ros_setup=workspace_raw.get("colcon_ros_setup", ""),
+        runtime_ros_setup=workspace_raw.get("runtime_ros_setup", ""),
+        workspace_setup=workspace_raw.get("workspace_setup", "install/setup.bash"),
         build_args=list(workspace_raw.get("build_args", [])),
         lint_test_args=list(workspace_raw.get("lint_test_args", [])),
         log_dir=_as_path(workspace_root, workspace_raw.get("log_dir", "logs")),

@@ -5,6 +5,7 @@ from robot_testkit.orchestrator import RobotOrchestrator
 def test_dry_run_build_and_lint_do_not_require_colcon() -> None:
     orchestrator = RobotOrchestrator(load_config("config/robot-testkit.yaml"), dry_run=True)
 
-    assert orchestrator.build_source().ok
+    build = orchestrator.build_source()
+    assert build.ok
     assert orchestrator.run_lint_tests().ok
-
+    assert "source /opt/ros/humble/install.bash" in build.summary()["command"]

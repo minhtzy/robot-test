@@ -6,7 +6,7 @@ import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 from .errors import CommandError
 
@@ -80,6 +80,31 @@ class CommandRunner:
         if check and not result.ok:
             raise CommandError(f"command failed ({result.returncode}): {self._format(command)}")
         return result
+
+    def run_with_sources(
+        self,
+        command: List[str],
+        sources: Sequence[Path],
+        *,
+        timeout: Optional[int] = None,
+        check: bool = True,
+        env: Optional[Dict[str, str]] = None,
+        log_name: Optional[str] = None,
+    ) -> CommandResult:
+        return self.run(
+            self.wrap_with_sources(command, sources),
+            timeout=timeout,
+            check=check,
+            env=env,
+            log_name=log_name,
+        )
+
+    @staticmethod
+    def wrap_with_sources(command: List[str], sources: Sequence[Path]) -> List[str]:
+        source_parts = [f"source {shlex.quote(str(path))}" for path in sources]
+        command_part = " ".join(shlex.quote(part) for part in command)
+        script = " && ".join(source_parts + [command_part])
+        return ["bash", "-lc", script]
 
     def _clean_env(self, env: Optional[Dict[str, str]]) -> Dict[str, str]:
         merged = os.environ.copy()

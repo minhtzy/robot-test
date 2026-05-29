@@ -8,6 +8,12 @@ This workspace contains a ROS2 robot test toolkit with:
 
 Python runtime baseline: Python 3.8 or newer.
 
+ROS2 environment sourcing:
+
+- `colcon build` and `colcon test` run after `source /opt/ros/{ros_distro}/install.bash`.
+- `ros2 run`, `ros2 service`, and `ros2 topic` run after `source /opt/ros/{ros_distro}/setup.bash && source install/setup.bash`.
+- Configure `ros_distro`, `colcon_ros_setup`, `runtime_ros_setup`, and `workspace_setup` in `config/robot-testkit.yaml`.
+
 Start with dry-run commands until robot profiles are configured:
 
 ```bash

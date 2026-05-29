@@ -12,3 +12,4 @@ def test_load_default_config_profiles() -> None:
     assert config.profile("ur_sim").launch["profile"] == "ur-sim"
     assert config.profile("ur_sim").launch["network"] == "ur-net"
     assert config.workspace.root == Path.cwd()
+    assert config.workspace.ros_distro == "humble"

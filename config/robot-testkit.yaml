@@ -1,6 +1,9 @@
 workspace:
   root: "."
-  ros_setup: ""
+  ros_distro: "humble"
+  colcon_ros_setup: "/opt/ros/{ros_distro}/install.bash"
+  runtime_ros_setup: "/opt/ros/{ros_distro}/setup.bash"
+  workspace_setup: "install/setup.bash"
   build_args: []
   lint_test_args:
     - "--event-handlers"
