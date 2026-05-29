@@ -1,0 +1,13 @@
+services:
+  fairino-sim:
+    image: ${FAIRINO_SIM_IMAGE:-fairino_simmachine}
+    container_name: ${FAIRINO_SIM_CONTAINER:-fairino-container}
+    privileged: true
+    user: root
+    networks:
+      - fairino-net
+
+networks:
+  fairino-net:
+    name: ${FAIRINO_SIM_NETWORK:-fairino-net}
+    external: true

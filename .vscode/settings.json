@@ -1,0 +1,14 @@
+{
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests"],
+  "workbench.browser.enableChatTools": true,
+  "terminal.integrated.env.osx": {
+    "ROBOT_TESTKIT_CONFIG": "${workspaceFolder}/config/robot-testkit.yaml"
+  },
+  "terminal.integrated.env.linux": {
+    "ROBOT_TESTKIT_CONFIG": "${workspaceFolder}/config/robot-testkit.yaml"
+  },
+  "terminal.integrated.env.windows": {
+    "ROBOT_TESTKIT_CONFIG": "${workspaceFolder}\\config\\robot-testkit.yaml"
+  }
+}

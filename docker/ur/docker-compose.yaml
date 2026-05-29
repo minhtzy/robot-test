@@ -1,0 +1,14 @@
+services:
+  ur-sim:
+    image: ${UR_SIM_IMAGE:-ur_simmachine}
+    container_name: ${UR_SIM_CONTAINER:-ur-container}
+    privileged: true
+    user: root
+    profiles: ["ur-sim"]
+    networks:
+      - ur-net
+
+networks:
+  ur-net:
+    name: ${UR_SIM_NETWORK:-ur-net}
+    external: true

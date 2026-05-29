@@ -1,0 +1,108 @@
+workspace:
+  root: "."
+  ros_setup: ""
+  build_args: []
+  lint_test_args:
+    - "--event-handlers"
+    - "console_direct+"
+  log_dir: "logs"
+  report_dir: "reports"
+  memory_dir: ".robot-test-memory"
+
+browser:
+  login_url: "http://127.0.0.1"
+  username_env: "ROBOT_USERNAME"
+  password_env: "ROBOT_PASSWORD"
+  vscode_tool_command_env: "VSCODE_BROWSER_TOOL_COMMAND"
+  adapter_preference:
+    - "vscode"
+    - "playwright"
+    - "system"
+
+fanuc_bridge:
+  endpoint: "http://windows-fanuc-bridge.local:8080"
+  token_env: "FANUC_BRIDGE_TOKEN"
+  timeout_seconds: 30
+
+robots:
+  fairino_sim:
+    robot_type: "fairino"
+    target: "simulation"
+    launch:
+      mode: "docker_run"
+      image: "fairino_simmachine"
+      name: "fairino-container"
+      network: "fairino-net"
+      detach: true
+      publish_all_ports: true
+      privileged: true
+      user: "root"
+      replace_existing: true
+      health_command: "docker ps --filter name=fairino-container --filter status=running"
+    nodes:
+      - name: "client"
+        package: "project_client"
+        executable: "client_node"
+        args: ["--robot-ip", "127.0.0.1"]
+      - name: "robot_control"
+        package: "project_robot_control"
+        executable: "robot_control_node"
+      - name: "arm_control"
+        package: "project_arm_control"
+        executable: "arm_control_node"
+    allowlist_services:
+      - "/robot_control/init_session"
+      - "/robot_control/set_io"
+      - "/arm_control/move"
+      - "/arm_control/stop"
+    monitor_topics:
+      - "/arm/state"
+  ur_sim:
+    robot_type: "ur"
+    target: "simulation"
+    launch:
+      mode: "docker_compose"
+      compose_file: "docker/ur/docker-compose.yaml"
+      profile: "ur-sim"
+      network: "ur-net"
+      health_command: "docker compose -f docker/ur/docker-compose.yaml ps --status running"
+    nodes:
+      - name: "client"
+        package: "project_client"
+        executable: "client_node"
+        args: ["--robot-ip", "127.0.0.1"]
+      - name: "robot_control"
+        package: "project_robot_control"
+        executable: "robot_control_node"
+      - name: "arm_control"
+        package: "project_arm_control"
+        executable: "arm_control_node"
+    allowlist_services:
+      - "/robot_control/init_session"
+      - "/robot_control/set_io"
+      - "/arm_control/move"
+      - "/arm_control/stop"
+    monitor_topics:
+      - "/arm/state"
+  fanuc_windows:
+    robot_type: "fanuc"
+    target: "simulation"
+    launch:
+      mode: "fanuc_bridge"
+      bridge_profile: "default"
+    nodes: []
+    allowlist_services:
+      - "/fanuc/init_session"
+      - "/fanuc/set_io"
+      - "/fanuc/move"
+      - "/fanuc/stop"
+    monitor_topics:
+      - "/fanuc/arm_state"
+  real_robot_template:
+    robot_type: "generic"
+    target: "real"
+    launch:
+      mode: "attach"
+    nodes: []
+    allowlist_services: []
+    monitor_topics: []

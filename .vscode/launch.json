@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Robot Testkit CLI: dry-run Fairino scenario",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "robot_testkit.cli",
+      "args": ["--dry-run", "run-scenario", "--profile", "fairino_sim"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}
+
