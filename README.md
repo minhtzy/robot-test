@@ -22,6 +22,8 @@ Robot targets are resolved from each profile before execution:
 - `services` define allowed service names plus default type/payload.
 - `monitor_topics` defines topics allowed for `ros2 topic echo`.
 
+Full workflow: [docs/test-workflow.md](docs/test-workflow.md).
+
 Start with dry-run commands until robot profiles are configured:
 
 ```bash
