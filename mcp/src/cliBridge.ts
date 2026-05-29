@@ -18,9 +18,13 @@ export function repoRoot(): string {
   return path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..", "..");
 }
 
+export function resolvePythonCommand(env: NodeJS.ProcessEnv = process.env): string {
+  return env.ROBOT_TESTKIT_PYTHON || "python3";
+}
+
 export async function runRobotCli(args: string[], options: RobotToolOptions = {}): Promise<CliResult> {
   const root = repoRoot();
-  const python = process.env.ROBOT_TESTKIT_PYTHON || process.env.PYTHON || "python3";
+  const python = resolvePythonCommand();
   const cliArgs = ["-m", "robot_testkit.cli"];
   if (options.config) {
     cliArgs.push("--config", options.config);
