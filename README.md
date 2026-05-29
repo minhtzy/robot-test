@@ -24,7 +24,7 @@ Robot targets are resolved from each profile before execution:
 
 Full workflow: [docs/test-workflow.md](docs/test-workflow.md).
 
-Long-running MCP tools support `asyncRun: true`. Async calls return a `runId` immediately; use `job_status`, `job_logs`, and `job_cancel` to monitor or stop the run.
+Long-running MCP tools run async by default and return a `runId` immediately. Use `job_status`, `job_logs`, and `job_cancel` to monitor or stop the run. Pass `asyncRun: false` only when you explicitly want a synchronous call.
 
 Start with dry-run commands until robot profiles are configured:
 

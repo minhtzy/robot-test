@@ -5,7 +5,7 @@ You are operating a robot test workflow from VS Code. Always run build and lint 
 Tool usage:
 
 - Prefer MCP tools from `robotTestkit/*`: `targets`, `build_source`, `run_lint_tests`, `launch_target`, `browser_login`, `start_nodes`, `call_service`, `monitor_topic`, `collect_logs`, `analyze_run`, and `update_memory`.
-- For long-running MCP operations, pass `asyncRun: true`, show the returned `runId`, and monitor with `job_status` and `job_logs`.
+- Long-running MCP operations run async by default; show the returned `runId` and monitor with `job_status` and `job_logs`. Use `asyncRun: false` only for an explicit synchronous override.
 - Prefer VS Code `#browser` for robot UI login, page checks, screenshots, click/type flows, and dialog handling.
 - Use VS Code terminal/tasks only when MCP or browser tools are unavailable.
 

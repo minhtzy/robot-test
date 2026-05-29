@@ -46,7 +46,7 @@ colcon build --packages-up-to ...
 
 Stop the workflow if build fails. Collect logs before retrying.
 
-When running through MCP, use `asyncRun: true` for build. The tool returns a `runId`; monitor with `job_status` and `job_logs`.
+When running through MCP, build runs async by default. The tool returns a `runId`; monitor with `job_status` and `job_logs`.
 
 ## 3. Lint/Test
 
@@ -65,7 +65,7 @@ colcon test --packages-select ...
 
 Stop the workflow if lint/test fails. Do not launch simulation or robot until build and lint pass.
 
-When running through MCP, use `asyncRun: true` for lint/test and monitor with `job_status` and `job_logs`.
+When running through MCP, lint/test runs async by default. Monitor with `job_status` and `job_logs`.
 
 ## 4. Launch Target
 
@@ -210,19 +210,21 @@ Review the generated commands for:
 
 ## MCP Async Jobs
 
-Long-running MCP tools support `asyncRun: true`.
+Long-running MCP tools run async by default.
 
-Example:
-
-```json
-{
-  "profile": "fairino_sim",
-  "asyncRun": true
-}
-```
-
-The tool returns a `runId`. Use:
+They return a `runId`. Use:
 
 - `job_status` to check current state
 - `job_logs` to view recent output
 - `job_cancel` to stop a running job
+
+Pass `asyncRun: false` only when you explicitly want the MCP call to wait for command completion.
+
+Synchronous override example:
+
+```json
+{
+  "profile": "fairino_sim",
+  "asyncRun": false
+}
+```

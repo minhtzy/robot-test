@@ -25,7 +25,7 @@ Operational rules:
 2. Run `targets` before execution to identify selected build packages, lint packages, ROS2 nodes, services, and topics.
 3. Run `build_source` before launch.
 4. Run `run_lint_tests` before launch.
-5. For long-running MCP operations, use `asyncRun: true`, report the `runId`, and poll `job_status`/`job_logs`.
+5. Long-running MCP operations run async by default; report the `runId` and poll `job_status`/`job_logs`. Use `asyncRun: false` only for an explicit synchronous override.
 6. For Fairino, launch simulation through the `fairino_sim` profile. It uses Docker network `fairino-net` and `docker run -d -P --name fairino-container --privileged -u root --net fairino-net fairino_simmachine`.
 7. For UR, launch simulation through the `ur_sim` profile and its own Docker network `ur-net`.
 8. For FANUC, use the Windows bridge profile. Do not call Windows API directly from this workspace.

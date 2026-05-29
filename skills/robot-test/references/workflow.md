@@ -16,7 +16,7 @@ Use this mapping when operating the robot test workflow from VS Code.
 | Analyze | MCP `analyze_run` | `python3 -m robot_testkit.cli analyze` |
 | Update memory | MCP `update_memory` | `python3 -m robot_testkit.cli update-memory --profile PROFILE` |
 
-For long-running steps, pass `asyncRun: true` to the MCP tool. Then use `job_status`, `job_logs`, and `job_cancel` with the returned `runId`.
+Long-running MCP steps run async by default. Use `job_status`, `job_logs`, and `job_cancel` with the returned `runId`. Pass `asyncRun: false` only for an explicit synchronous override.
 
 ## Required Order
 
@@ -33,9 +33,9 @@ For long-running steps, pass `asyncRun: true` to the MCP tool. Then use `job_sta
 
 ## Async Monitoring
 
-Use async mode when a command may take more than a few seconds:
+Use the default async mode when a command may take more than a few seconds:
 
-1. Call the operation with `asyncRun: true`.
+1. Call the operation normally.
 2. Save and show the returned `runId`.
 3. Poll `job_status` until status changes from `running`.
 4. Call `job_logs` whenever progress is needed.

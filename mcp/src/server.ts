@@ -7,17 +7,18 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
+import { shouldRunAsync } from "./asyncOptions.js";
 import { repoRoot, runRobotCli, toolResponse } from "./cliBridge.js";
 import { cancelJob, getJobStatus, readJobLogs, startRobotCliJob } from "./jobManager.js";
 
 const CommonOptions = {
   config: z.string().optional(),
   dryRun: z.boolean().default(false),
-  asyncRun: z.boolean().default(false)
+  asyncRun: z.boolean().optional()
 };
 
-async function runCliTool(args: string[], options: { config?: string; dryRun?: boolean; asyncRun?: boolean; label?: string }) {
-  if (options.asyncRun) {
+async function runCliTool(args: string[], options: { config?: string; dryRun?: boolean; asyncRun?: boolean; label?: string; defaultAsync?: boolean }) {
+  if (shouldRunAsync(options.asyncRun, options.defaultAsync)) {
     return toolResponse({ ok: true, exitCode: 0, stdout: "", stderr: "", json: await startRobotCliJob(args, options) });
   }
   return toolResponse(await runRobotCli(args, options));
@@ -32,7 +33,7 @@ function createServer(): McpServer {
   }, async ({ config, dryRun, asyncRun, profile }) => {
     const args = ["build"];
     if (profile) args.push("--profile", profile);
-    return runCliTool(args, { config, dryRun, asyncRun, label: "build" });
+    return runCliTool(args, { config, dryRun, asyncRun, label: "build", defaultAsync: true });
   });
 
   server.registerTool("run_lint_tests", {
@@ -41,7 +42,7 @@ function createServer(): McpServer {
   }, async ({ config, dryRun, asyncRun, profile }) => {
     const args = ["lint"];
     if (profile) args.push("--profile", profile);
-    return runCliTool(args, { config, dryRun, asyncRun, label: "lint" });
+    return runCliTool(args, { config, dryRun, asyncRun, label: "lint", defaultAsync: true });
   });
 
   server.registerTool("targets", {
@@ -52,12 +53,12 @@ function createServer(): McpServer {
   server.registerTool("launch_target", {
     description: "Launch simulation, attach to a real robot, or call the FANUC Windows bridge.",
     inputSchema: { ...CommonOptions, profile: z.string() }
-  }, async ({ config, dryRun, asyncRun, profile }) => runCliTool(["launch", "--profile", profile], { config, dryRun, asyncRun, label: "launch" }));
+  }, async ({ config, dryRun, asyncRun, profile }) => runCliTool(["launch", "--profile", profile], { config, dryRun, asyncRun, label: "launch", defaultAsync: true }));
 
   server.registerTool("browser_login", {
     description: "Open robot browser login using VS Code browser tool, Playwright, or system browser fallback.",
     inputSchema: { ...CommonOptions, profile: z.string().optional() }
-  }, async ({ config, dryRun, asyncRun }) => runCliTool(["browser-login"], { config, dryRun, asyncRun, label: "browser-login" }));
+  }, async ({ config, dryRun, asyncRun }) => runCliTool(["browser-login"], { config, dryRun, asyncRun, label: "browser-login", defaultAsync: true }));
 
   server.registerTool("start_nodes", {
     description: "Start configured ROS2 nodes with ros2 run.",
@@ -65,7 +66,7 @@ function createServer(): McpServer {
   }, async ({ config, dryRun, asyncRun, profile, nodes }) => {
     const args = ["start-nodes", "--profile", profile];
     for (const node of nodes ?? []) args.push("--node", node);
-    return runCliTool(args, { config, dryRun, asyncRun, label: "start-nodes" });
+    return runCliTool(args, { config, dryRun, asyncRun, label: "start-nodes", defaultAsync: true });
   });
 
   server.registerTool("call_service", {
@@ -83,7 +84,7 @@ function createServer(): McpServer {
     if (serviceType !== undefined) args.push("--type", serviceType);
     if (payload !== undefined) args.push("--payload", payload);
     if (confirm) args.push("--confirm");
-    return runCliTool(args, { config, dryRun, asyncRun, label: "service" });
+    return runCliTool(args, { config, dryRun, asyncRun, label: "service", defaultAsync: true });
   });
 
   server.registerTool("monitor_topic", {
@@ -92,18 +93,18 @@ function createServer(): McpServer {
   }, async ({ config, dryRun, asyncRun, profile, topic, seconds }) => {
     const args = ["monitor-topic", "--topic", topic, "--seconds", String(seconds)];
     if (profile) args.push("--profile", profile);
-    return runCliTool(args, { config, dryRun, asyncRun, label: "topic" });
+    return runCliTool(args, { config, dryRun, asyncRun, label: "topic", defaultAsync: true });
   });
 
   server.registerTool("collect_logs", {
     description: "Collect and analyze latest logs into reports/latest.json.",
     inputSchema: CommonOptions
-  }, async ({ config, dryRun, asyncRun }) => runCliTool(["collect-logs"], { config, dryRun, asyncRun, label: "collect-logs" }));
+  }, async ({ config, dryRun, asyncRun }) => runCliTool(["collect-logs"], { config, dryRun, asyncRun, label: "collect-logs", defaultAsync: true }));
 
   server.registerTool("analyze_run", {
     description: "Analyze latest run logs and return pass/fail findings.",
     inputSchema: CommonOptions
-  }, async ({ config, dryRun, asyncRun }) => runCliTool(["analyze"], { config, dryRun, asyncRun, label: "analyze" }));
+  }, async ({ config, dryRun, asyncRun }) => runCliTool(["analyze"], { config, dryRun, asyncRun, label: "analyze", defaultAsync: true }));
 
   server.registerTool("run_scenario", {
     description: "Run build, lint, launch, browser login, nodes, topic monitor, analysis, and memory update.",
@@ -111,13 +112,13 @@ function createServer(): McpServer {
   }, async ({ config, dryRun, asyncRun, profile, confirm, monitorSeconds }) => {
     const args = ["run-scenario", "--profile", profile, "--monitor-seconds", String(monitorSeconds)];
     if (confirm) args.push("--confirm");
-    return runCliTool(args, { config, dryRun, asyncRun, label: "scenario" });
+    return runCliTool(args, { config, dryRun, asyncRun, label: "scenario", defaultAsync: true });
   });
 
   server.registerTool("update_memory", {
     description: "Persist the latest analyzed run outcome to local memory.",
     inputSchema: { ...CommonOptions, profile: z.string() }
-  }, async ({ config, dryRun, asyncRun, profile }) => runCliTool(["update-memory", "--profile", profile], { config, dryRun, asyncRun, label: "memory" }));
+  }, async ({ config, dryRun, asyncRun, profile }) => runCliTool(["update-memory", "--profile", profile], { config, dryRun, asyncRun, label: "memory", defaultAsync: true }));
 
   server.registerTool("job_status", {
     description: "Return status for an async robot test job.",
